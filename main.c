@@ -8,9 +8,9 @@
 #define WIDTH 80*WIND_FAC
 #define HEIGHT 60*WIND_FAC
 
-#define PAD 1
-#define BOARD_W 9
-#define BOARD_H 9
+#define PAD 2
+#define BOARD_W 8
+#define BOARD_H 8
 
 #define ROW_SIZE HEIGHT/BOARD_H
 #define COL_SIZE WIDTH/BOARD_W
@@ -32,7 +32,7 @@ void draw_board(int board[ROW_SIZE][COL_SIZE])
 
 void board_write(int board[ROW_SIZE][COL_SIZE], char text[])
 {
-  int char_width = 8;
+  int char_width = 7;
 
   for (size_t i = 0; i < strlen(text); ++i) {
     int code_point = (int)text[i];
@@ -42,30 +42,36 @@ void board_write(int board[ROW_SIZE][COL_SIZE], char text[])
       unsigned char byte = font8x8_basic[code_point][row];
 
       for (int k = 0; k < char_width; ++k) {
-        board[row][i * (char_width + 1) + k] = (byte >> k) & 1;
+        board[row][(i * (char_width + 1) + k)] = (byte >> k) & 1;
       }
+    }
+  }
+}
+
+void board_move_right(int board[ROW_SIZE][COL_SIZE])
+{
+  for (int col = COL_SIZE - 1; col >= 0; --col) {
+    for (int row = 0; row < ROW_SIZE; ++row) {
+      int v = board[row][col];
+      board[row][col] = 0;
+      board[row][col+1] = v;
     }
   }
 }
 
 int main()
 {
-  int w = WIDTH;
-  int h = HEIGHT;
-
   int board[ROW_SIZE][COL_SIZE];
   memset(board, 0, sizeof board);
   printf("board initialized with %d/%d dimensions\n", ROW_SIZE, COL_SIZE);
 
   board_write(board, "Mahdi");
 
-  // SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-  InitWindow(w, h, "LED sign board");
-  SetTargetFPS(60);
+  InitWindow(WIDTH, HEIGHT, "LED sign board");
+  SetTargetFPS(10);
 
   while(!WindowShouldClose()) {
-    w = GetScreenWidth();
-    h = GetScreenHeight();
+    board_move_right(board);
 
     BeginDrawing();
     draw_board(board);
