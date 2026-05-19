@@ -1,0 +1,10 @@
+CompileFlags:
+  Add: [-I./thirdparty/raylib-6.0_linux_amd64/include]
+InlayHints:
+  BlockEnd: false
+  Designators: true
+  Enabled: true
+  ParameterNames: true
+  DeducedTypes: true
+  DefaultArguments: false
+  TypeNameLimit: 24
