@@ -2,21 +2,23 @@
 #include <string.h>
 #include <raylib.h>
 
+#include "./bitmap.c"
+
 #define WIND_FAC 10
 #define WIDTH 80*WIND_FAC
 #define HEIGHT 60*WIND_FAC
 
-#define PAD 10
-#define BOARD_W 90
-#define BOARD_H 90
+#define PAD 1
+#define BOARD_W 9
+#define BOARD_H 9
 
 #define ROW_SIZE HEIGHT/BOARD_H
 #define COL_SIZE WIDTH/BOARD_W
 
+#define ARRAY_LEN(array) (sizeof(array)/sizeof(array[0]))
 
 void draw_board(int board[ROW_SIZE][COL_SIZE])
 {
-
   for (size_t i = 0; i < ROW_SIZE; ++i) {
     for (size_t j = 0; j < COL_SIZE; ++j) {
       DrawRectangleV(
@@ -30,24 +32,20 @@ void draw_board(int board[ROW_SIZE][COL_SIZE])
 
 void board_write(int board[ROW_SIZE][COL_SIZE], char text[])
 {
-  board[0][0] = 1;
-  board[1][0] = 1;
-  board[2][0] = 1;
-  board[3][0] = 1;
+  int char_width = 8;
 
-  board[0][1] = 1;
+  for (size_t i = 0; i < strlen(text); ++i) {
+    int code_point = (int)text[i];
+    size_t row_len = ARRAY_LEN(font8x8_basic[code_point]);
 
-  board[1][2] = 1;
-  board[2][3] = 1;
+    for (size_t row = 0; row < row_len; ++row) {
+      unsigned char byte = font8x8_basic[code_point][row];
 
-  board[1][4] = 1;
-  board[0][5] = 1;
-
-  board[0][6] = 1;
-  board[1][6] = 1;
-  board[2][6] = 1;
-  board[3][6] = 1;
-
+      for (int k = 0; k < char_width; ++k) {
+        board[row][i * (char_width + 1) + k] = (byte >> k) & 1;
+      }
+    }
+  }
 }
 
 int main()
