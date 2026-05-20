@@ -7,7 +7,7 @@
 
 #define WIND_FAC 10
 #define WIDTH 80*WIND_FAC
-#define HEIGHT 60*WIND_FAC
+#define HEIGHT 8*WIND_FAC
 
 #define PAD 2
 #define BOARD_W 8
