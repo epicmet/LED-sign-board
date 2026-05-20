@@ -75,6 +75,7 @@ int main(int argc, char **argv)
 {
   bool *render_gif = flag_bool("render-gif", false, "Render gif out of screen recording");
   bool *help = flag_bool("help", false, "Print help");
+  char **text = flag_str("text", "  EMPTY  ", "Text to render");
 
   if (!flag_parse(argc, argv)) {
     usage(stderr);
@@ -92,9 +93,8 @@ int main(int argc, char **argv)
   int board[ROW_SIZE][SCROLL_COL_SIZE];
   memset(board, 0, sizeof board);
 
-  char text[] = "   Mahdi <3 Narges              ";
-  size_t text_len = strlen(text);
-  board_write(board, text);
+  size_t text_len = strlen(*text);
+  board_write(board, *text);
   assert(text_len < SCROLL_COL_SIZE && "can not render text longer than SCROLL_COL_SIZE");
 
   size_t content_width = text_len * LED_CHAR_WIDTH + 1;
