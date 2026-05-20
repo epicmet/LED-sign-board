@@ -3,6 +3,9 @@
 #include <assert.h>
 #include <raylib.h>
 
+#define MSF_GIF_IMPL
+#include "./thirdparty/msf_gif.h"
+
 #include "./bitmap.c"
 
 #define WIND_FAC 10
@@ -17,6 +20,8 @@
 #define COL_SIZE WIDTH/BOARD_W
 #define SCROLL_COL_SIZE 4096
 #define CHAR_WIDTH 8
+
+#define GIF_RECORD_FRAMERATE 5
 
 #define ARRAY_LEN(array) (sizeof(array)/sizeof(array[0]))
 
@@ -49,7 +54,7 @@ void board_write(int board[ROW_SIZE][SCROLL_COL_SIZE], char text[])
   }
 }
 
-int board_move_left(size_t content_width)
+int board_move_left()
 {
   static size_t scroll_offset = 0;
 
@@ -61,7 +66,7 @@ int main()
   int board[ROW_SIZE][SCROLL_COL_SIZE];
   memset(board, 0, sizeof board);
 
-  char text[] = "Mahdi <3 Narges";
+  char text[] = "   Mahdi <3 Narges              ";
   size_t text_len = strlen(text);
   board_write(board, text);
   assert(text_len < SCROLL_COL_SIZE && "can not render text longer than SCROLL_COL_SIZE");
@@ -72,15 +77,35 @@ int main()
   InitWindow(WIDTH, HEIGHT, "LED sign board");
   SetTargetFPS(20);
 
+  MsfGifState gifState = {0};
+  msf_gif_begin(&gifState, GetRenderWidth(), GetRenderHeight());
+  int gif_frame_counter = 0;
+
   while(!WindowShouldClose()) {
     BeginDrawing();
 
     ClearBackground(GRAY);
-    int scroll_offset = board_move_left(content_width);
+    int scroll_offset = board_move_left();
     board_draw(board, scroll_offset, content_width + gap_between_loop);
 
     EndDrawing();
+
+    gif_frame_counter++;
+    if (gif_frame_counter > GIF_RECORD_FRAMERATE) {
+      Image im_screen = LoadImageFromScreen();
+
+      msf_gif_frame(&gifState, im_screen.data, (int)((1.0f/60.0f)*GIF_RECORD_FRAMERATE)/15, 16, im_screen.width*4);
+      UnloadImage(im_screen);
+
+      gif_frame_counter = 0;
+    }
   }
+
+  MsfGifResult result = msf_gif_end(&gifState);
+  if (result.data) {
+    SaveFileData("screenrecording.gif", result.data, (unsigned int)result.dataSize);
+  }
+  msf_gif_free(result);
 
   CloseWindow();
 
