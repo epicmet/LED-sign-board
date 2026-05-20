@@ -6,6 +6,9 @@
 #define MSF_GIF_IMPL
 #include "./thirdparty/msf_gif.h"
 
+#define FLAG_IMPLEMENTATION
+#include "./thirdparty/flag.h"
+
 #include "./bitmap.c"
 
 #define WIND_FAC 10
@@ -19,7 +22,7 @@
 #define ROW_SIZE HEIGHT/BOARD_H
 #define COL_SIZE WIDTH/BOARD_W
 #define SCROLL_COL_SIZE 4096
-#define CHAR_WIDTH 8
+#define LED_CHAR_WIDTH 8
 
 #define GIF_RECORD_FRAMERATE 5
 
@@ -47,8 +50,8 @@ void board_write(int board[ROW_SIZE][SCROLL_COL_SIZE], char text[])
     for (size_t row = 0; row < row_len; ++row) {
       unsigned char byte = font8x8_basic[code_point][row];
 
-      for (int k = 0; k < CHAR_WIDTH; ++k) {
-        board[row][(i * (CHAR_WIDTH + 1) + k)] = (byte >> k) & 1;
+      for (int k = 0; k < LED_CHAR_WIDTH; ++k) {
+        board[row][(i * (LED_CHAR_WIDTH + 1) + k)] = (byte >> k) & 1;
       }
     }
   }
@@ -61,8 +64,31 @@ int board_move_left()
   return scroll_offset += 1;
 }
 
-int main()
+void usage(FILE *stream)
 {
+    fprintf(stream, "Usage: ./ledsb [OPTIONS] [--] [ARGS]\n");
+    fprintf(stream, "OPTIONS:\n");
+    flag_print_options(stream);
+}
+
+int main(int argc, char **argv)
+{
+  bool *render_gif = flag_bool("render-gif", false, "Render gif out of screen recording");
+  bool *help = flag_bool("help", false, "Print help");
+
+  if (!flag_parse(argc, argv)) {
+    usage(stderr);
+    flag_print_error(stderr);
+    exit(1);
+  }
+  argc = flag_rest_argc();
+  argv = flag_rest_argv();
+
+  if (*help) {
+    usage(stdout);
+    exit(0);
+  }
+
   int board[ROW_SIZE][SCROLL_COL_SIZE];
   memset(board, 0, sizeof board);
 
@@ -71,8 +97,8 @@ int main()
   board_write(board, text);
   assert(text_len < SCROLL_COL_SIZE && "can not render text longer than SCROLL_COL_SIZE");
 
-  size_t content_width = text_len * CHAR_WIDTH + 1;
-  size_t gap_between_loop = 5 * CHAR_WIDTH;
+  size_t content_width = text_len * LED_CHAR_WIDTH + 1;
+  size_t gap_between_loop = 5 * LED_CHAR_WIDTH;
 
   InitWindow(WIDTH, HEIGHT, "LED sign board");
   SetTargetFPS(20);
@@ -90,22 +116,26 @@ int main()
 
     EndDrawing();
 
-    gif_frame_counter++;
-    if (gif_frame_counter > GIF_RECORD_FRAMERATE) {
-      Image im_screen = LoadImageFromScreen();
+    if (*render_gif) {
+      gif_frame_counter++;
+      if (gif_frame_counter > GIF_RECORD_FRAMERATE) {
+        Image im_screen = LoadImageFromScreen();
 
-      msf_gif_frame(&gifState, im_screen.data, (int)((1.0f/60.0f)*GIF_RECORD_FRAMERATE)/15, 16, im_screen.width*4);
-      UnloadImage(im_screen);
+        msf_gif_frame(&gifState, im_screen.data, (int)((1.0f/60.0f)*GIF_RECORD_FRAMERATE)/15, 16, im_screen.width*4);
+        UnloadImage(im_screen);
 
-      gif_frame_counter = 0;
+        gif_frame_counter = 0;
+      }
     }
   }
 
-  MsfGifResult result = msf_gif_end(&gifState);
-  if (result.data) {
-    SaveFileData("screenrecording.gif", result.data, (unsigned int)result.dataSize);
+  if (*render_gif) {
+    MsfGifResult result = msf_gif_end(&gifState);
+    if (result.data) {
+      SaveFileData("screenrecording.gif", result.data, (unsigned int)result.dataSize);
+    }
+    msf_gif_free(result);
   }
-  msf_gif_free(result);
 
   CloseWindow();
 
