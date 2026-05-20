@@ -24,7 +24,7 @@
 #define SCROLL_COL_SIZE 4096
 #define LED_CHAR_WIDTH 8
 
-#define GIF_RECORD_FRAMERATE 5
+#define GIF_RECORD_FRAMERATE 1
 
 #define ARRAY_LEN(array) (sizeof(array)/sizeof(array[0]))
 
