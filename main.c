@@ -94,8 +94,9 @@ int main(int argc, char **argv)
   memset(board, 0, sizeof board);
 
   size_t text_len = strlen(*text);
-  board_write(board, *text);
   assert(text_len < SCROLL_COL_SIZE && "can not render text longer than SCROLL_COL_SIZE");
+
+  board_write(board, *text);
 
   size_t content_width = text_len * LED_CHAR_WIDTH + 1;
   size_t gap_between_loop = 5 * LED_CHAR_WIDTH;
